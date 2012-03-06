@@ -510,7 +510,7 @@ public class PartitionExecutor implements Runnable, Shutdownable, Loggable {
         public Site getSite();
         public ExecutionEngine getExecutionEngine();
         public long getLastCommittedTxnId();
-//        public long getNextUndo();
+        public long getNextUndo();
 //        public long getTxnId();
 //        public Object getOperStatus();
     }
@@ -522,7 +522,7 @@ public class PartitionExecutor implements Runnable, Shutdownable, Loggable {
         public Site getSite()                       { return site; }
         public ExecutionEngine getExecutionEngine() { return ee; }
         public long getLastCommittedTxnId()         { return PartitionExecutor.this.getLastCommittedTxnId(); }
-//        public long getNextUndo()                   { return getNextUndoToken(); }
+        public long getNextUndo()                   { return getNextUndoToken(); }
 //        public long getTxnId()                      { return getCurrentTxnId(); }
 //        public String getOperStatus()               { return VoltDB.getOperStatus(); }
     }
@@ -1787,7 +1787,7 @@ public class PartitionExecutor implements Runnable, Shutdownable, Loggable {
                 LOG.debug(String.format("Bold! Disabling undo buffers for inflight %s [prob=%f]\n%s\n%s",
                                         ts, est.getAbortProbability(), est, plan.toString()));
             }
-        } else if (hstore_conf.site.exec_no_undo_logging_all == false) {
+        } else if (ts.isPredictReadOnly() == false && hstore_conf.site.exec_no_undo_logging_all == false) {
             undoToken = this.getNextUndoToken();
         }
         ts.fastInitRound(this.partitionId, undoToken);
