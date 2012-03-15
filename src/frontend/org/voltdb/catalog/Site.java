@@ -28,6 +28,7 @@ public class Site extends CatalogType {
 
     int m_id;
     CatalogMap<Partition> m_partitions;
+    CatalogMap<Replica> m_replicas;
     boolean m_isUp;
     int m_messenger_port;
     int m_proc_port;
@@ -38,6 +39,8 @@ public class Site extends CatalogType {
         this.addField("host", null);
         m_partitions = new CatalogMap<Partition>(catalog, this, path + "/" + "partitions", Partition.class);
         m_childCollections.put("partitions", m_partitions);
+        m_replicas = new CatalogMap<Replica>(catalog, this, path + "/" + "replicas", Replica.class);
+        m_childCollections.put("replicas", m_replicas);
         this.addField("isUp", m_isUp);
         this.addField("messenger_port", m_messenger_port);
         this.addField("proc_port", m_proc_port);
@@ -71,6 +74,11 @@ public class Site extends CatalogType {
     /** GETTER: Which logical data partition does this host process? */
     public CatalogMap<Partition> getPartitions() {
         return m_partitions;
+    }
+
+    /** GETTER: What are the replicas of this site? */
+    public CatalogMap<Replica> getReplicas() {
+        return m_replicas;
     }
 
     /** GETTER: Is the site up? */

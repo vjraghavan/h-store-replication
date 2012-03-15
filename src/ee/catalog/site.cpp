@@ -22,6 +22,7 @@
 #include <cassert>
 #include "site.h"
 #include "catalog.h"
+#include "replica.h"
 #include "host.h"
 #include "partition.h"
 
@@ -30,12 +31,13 @@ using namespace std;
 
 Site::Site(Catalog *catalog, CatalogType *parent, const string &path, const string &name)
 : CatalogType(catalog, parent, path, name),
-  m_partitions(catalog, this, path + "/" + "partitions")
+  m_partitions(catalog, this, path + "/" + "partitions"), m_replicas(catalog, this, path + "/" + "replicas")
 {
     CatalogValue value;
     m_fields["id"] = value;
     m_fields["host"] = value;
     m_childCollections["partitions"] = &m_partitions;
+    m_childCollections["replicas"] = &m_replicas;
     m_fields["isUp"] = value;
     m_fields["messenger_port"] = value;
     m_fields["proc_port"] = value;
@@ -56,12 +58,20 @@ CatalogType * Site::addChild(const std::string &collectionName, const std::strin
             return NULL;
         return m_partitions.add(childName);
     }
+    if (collectionName.compare("replicas") == 0) {
+        CatalogType *exists = m_replicas.get(childName);
+        if (exists)
+            return NULL;
+        return m_replicas.add(childName);
+    }
     return NULL;
 }
 
 CatalogType * Site::getChild(const std::string &collectionName, const std::string &childName) const {
     if (collectionName.compare("partitions") == 0)
         return m_partitions.get(childName);
+    if (collectionName.compare("replicas") == 0)
+        return m_replicas.get(childName);
     return NULL;
 }
 
@@ -69,6 +79,8 @@ void Site::removeChild(const std::string &collectionName, const std::string &chi
     assert (m_childCollections.find(collectionName) != m_childCollections.end());
     if (collectionName.compare("partitions") == 0)
         return m_partitions.remove(childName);
+    if (collectionName.compare("replicas") == 0)
+        return m_replicas.remove(childName);
 }
 
 int32_t Site::id() const {
@@ -81,6 +93,10 @@ const Host * Site::host() const {
 
 const CatalogMap<Partition> & Site::partitions() const {
     return m_partitions;
+}
+
+const CatalogMap<Replica> & Site::replicas() const {
+    return m_replicas;
 }
 
 bool Site::isUp() const {

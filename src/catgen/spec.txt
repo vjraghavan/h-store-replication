@@ -43,10 +43,19 @@ begin Partition       "A logical, replicate-able partition"
    int id             "Partition id"
 end
 
+begin Replica				"A replica for a site"
+   int id					"Replica Id"
+   int primarySiteId        "Which is the primary site ID of this replica?"
+   Host? host               "Which host does the replica belong to?"
+   int messenger_port       "Port used by HStoreCoordinator"
+   int proc_port		    "Port used by VoltProcedureListener"
+end
+
 begin Site             "A physical execution context for the system"
    int id               "Site Id"
    Host? host           "Which host does the site belong to?"
    Partition* partitions "Which logical data partition does this host process?"
+   Replica* replicas     "What are the replicas of this site?"
    bool isUp            "Is the site up?"
    int messenger_port   "Port used by HStoreCoordinator"
    int proc_port        "Port used by VoltProcedureListener"

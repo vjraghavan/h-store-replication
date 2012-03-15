@@ -983,8 +983,8 @@ public abstract class BenchmarkComponent {
                     m_port = Integer.valueOf(hostInfo[1]);
                     Integer site_id = (m_hstoreConf.client.txn_hints ? Integer.valueOf(hostInfo[2]) : null);
                     try {
-                        if (debug.get())
-                            LOG.debug(String.format("Creating connection to %s at %s:%d",
+                        
+                        LOG.info(String.format("Creating connection to %s at %s:%d",
                                                     (site_id != null ? HStoreSite.formatSiteName(site_id) : ""),
                                                     m_host, m_port));
                         createConnection(site_id, m_host, m_port);

@@ -172,7 +172,11 @@ public class ArgumentsParser {
     public static final String PARAM_SITE_PORT = PARAM_SITE + ".port";
     public static final String PARAM_SITE_PARTITION = PARAM_SITE + ".partition";
     public static final String PARAM_SITE_ID = PARAM_SITE + ".id";
+    public static final String PARAM_REPLICA_ID = PARAM_SITE + ".replica_id";
     public static final String PARAM_SITE_IGNORE_DTXN = PARAM_SITE + ".ignore_dtxn";
+    
+    public static final String PARAM_REPLICATION_FACTOR = "replication_factor";
+    
     // public static final String PARAM_SITE_ENABLE_SPECULATIVE_EXECUTION =
     // PARAM_SITE + ".exec_speculative_execution";
     // public static final String PARAM_SITE_ENABLE_DB2_REDIRECTS = PARAM_SITE +
@@ -198,7 +202,7 @@ public class ArgumentsParser {
     public static final String PARAM_DTXN_ENGINE = PARAM_DTXN + ".engine";
     public static final String PARAM_DTXN_COORDINATOR = PARAM_DTXN + ".coordinator";
 
-    public static final List<String> PARAMS = new ArrayList<String>();
+    public static final List<String> PARAMS = new ArrayList<String>();	
     static {
         for (Field field : ArgumentsParser.class.getDeclaredFields()) {
             try {

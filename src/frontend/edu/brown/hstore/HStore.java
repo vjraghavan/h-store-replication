@@ -90,15 +90,17 @@ public abstract class HStore {
         ArgumentsParser args = ArgumentsParser.load(vargs,
                     ArgumentsParser.PARAM_CATALOG,
                     ArgumentsParser.PARAM_SITE_ID,
-                    ArgumentsParser.PARAM_CONF
+                    ArgumentsParser.PARAM_CONF,
+                    ArgumentsParser.PARAM_REPLICA_ID
         );
         
         // HStoreSite Stuff
         final int site_id = args.getIntParam(ArgumentsParser.PARAM_SITE_ID);
+        final int replica_id = args.getIntParam(ArgumentsParser.PARAM_REPLICA_ID);
         Thread t = Thread.currentThread();
         t.setName(HStoreSite.getThreadName(site_id, "main", null));
         
-        final Site catalog_site = CatalogUtil.getSiteFromId(args.catalog_db, site_id);
+        final Site catalog_site = CatalogUtil.getSiteFromId(args.catalog_db, site_id, replica_id);
         if (catalog_site == null) throw new RuntimeException("Invalid site #" + site_id);
         
         HStoreConf hstore_conf = HStoreConf.initArgumentsParser(args, catalog_site);

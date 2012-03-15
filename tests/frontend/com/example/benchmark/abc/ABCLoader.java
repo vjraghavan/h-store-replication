@@ -59,6 +59,15 @@ public class ABCLoader extends BenchmarkComponent {
 	private void populateVoltTableA(VoltTable voltTable) {
 		Object[] row = new Object[]{1, "1"};
 		voltTable.addRow(row);
+		
+		row = new Object[]{2, "2"};
+		voltTable.addRow(row);
+		
+		row = new Object[]{3, "3"};
+		voltTable.addRow(row);
+		
+		row = new Object[]{4, "4"};
+		voltTable.addRow(row);
 	}
 
 	@Override

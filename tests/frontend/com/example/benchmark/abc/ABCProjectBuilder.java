@@ -25,6 +25,6 @@ public class ABCProjectBuilder extends AbstractProjectBuilder {
         super("abc", ABCProjectBuilder.class, PROCEDURES, PARTITIONING);
  
         // Create a single-statement stored procedure named 'DeleteData'
-        addStmtProcedure("DeleteData", "DELETE FROM TABLEA WHERE A_ID < ?");
+        addStmtProcedure("DeleteData", "DELETE FROM TABLEA WHERE A_ID = ?");
     }
 }

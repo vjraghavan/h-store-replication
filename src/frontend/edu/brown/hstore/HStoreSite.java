@@ -891,6 +891,7 @@ public class HStoreSite implements VoltProcedureListener.Handler, Shutdownable, 
     public void procedureInvocation(StoredProcedureInvocation request, byte[] serializedRequest, RpcCallback<byte[]> done) {
         long timestamp = (hstore_conf.site.txn_profiling ? ProfileMeasurement.getTime() : -1);
         
+        LOG.info("HStoreSite handling the procedureInvocation(...) request.\nSite ID: " + this.catalog_site.getId()+".\nProc port: " + this.catalog_site.getProc_port());
         // The serializedRequest is a StoredProcedureInvocation object
 //        StoredProcedureInvocation request = null;
 //        FastDeserializer fds = new FastDeserializer(serializedRequest); // this.incomingDeserializer.setBuffer(ByteBuffer.wrap(serializedRequest));
@@ -1190,6 +1191,7 @@ public class HStoreSite implements VoltProcedureListener.Handler, Shutdownable, 
         // -------------------------------
         // SINGLE-PARTITION TRANSACTION
         // -------------------------------
+        // TODO(kowshik): Point where single-partition transactions start up
         if (ts.isPredictSinglePartition()) {
             if (d) LOG.debug(String.format("Fast path single-partition execution for %s on partition %d [handle=%d]",
                              ts, base_partition, ts.getClientHandle()));

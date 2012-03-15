@@ -187,6 +187,10 @@ public class BenchmarkController {
      */
     Map<Integer, Set<Pair<String, Integer>>> m_launchHosts;
     
+    // (kowshik) For launching replicas
+    // SiteId -> Map of replica Id -> Pair[ReplicationHost, Port]
+    Map<Integer, Map<Integer, Pair<String, Integer>>> m_launchReplicaHosts;
+    
     private Catalog catalog;
     
     /**
@@ -364,7 +368,7 @@ public class BenchmarkController {
         if (m_config.useCatalogHosts == false) {
             if (debug.get()) LOG.debug("Creating host information from BenchmarkConfig");
             m_launchHosts = new HashMap<Integer, Set<Pair<String,Integer>>>();
-            int site_id = VoltDB.FIRST_SITE_ID;
+            int site_id = VoltDB.FIRST_SITE_ID;            
             for (String host : m_config.hosts) {
                 if (trace.get()) LOG.trace(String.format("Creating host info for %s: %s:%d",
                                                          HStoreSite.formatSiteName(site_id), host, HStoreConstants.DEFAULT_PORT));
@@ -386,12 +390,18 @@ public class BenchmarkController {
                                            HStoreSite.formatSiteName(e.getKey()),
                                            p.getFirst(), p.getSecond()));
                 unique_hosts.add(p.getFirst());
-            } // FOR
+            } // FOR            
+            
+            // (kowshik) Populating replica hosts information
+            m_launchReplicaHosts = CatalogUtil.getReplicaInfo(catalog);
+            LOG.info("(kowshik/vijay) Deserialized replica information from catalog!");
+            
+            assert(m_launchReplicaHosts != null);
         }
 
         // copy the catalog to the servers, but don't bother in local mode
 //        boolean status;
-        if (m_config.localmode == false) {
+        if (m_config.localmode == false) {        	
             // HACK
             m_config.hosts = new String[unique_hosts.size()];
             unique_hosts.toArray(m_config.hosts);
@@ -421,7 +431,7 @@ public class BenchmarkController {
             
             if (debug.get()) LOG.debug("Killing stragglers on " + threads.size() + " hosts");
             try {
-                ThreadUtil.runNewPool(threads, Math.min(25, threads.size())); 
+                ThreadUtil.runNewPool(threads, Math.min(25, threads.size()));
             } catch (Exception e) {
                 LogKeys logkey = LogKeys.benchmark_BenchmarkController_UnableToRunRemoteKill;
                 LOG.l7dlog(Level.FATAL, logkey.name(), e);
@@ -429,13 +439,13 @@ public class BenchmarkController {
                 System.exit(-1);
             }
             
-            // START THE SERVERS
+            // START THE SERVERS            
             if (m_config.noSites == false) {
                 this.startSites(catalog);
             }
             
         } else {
-            // START A SERVER LOCALLY IN-PROCESS
+            // START A SERVER LOCALLY IN-PROCESS        	
             VoltDB.Configuration localconfig = new VoltDB.Configuration();
             localconfig.m_pathToCatalog = m_jarFileName;
             m_localserver = new ServerThread(localconfig);
@@ -445,7 +455,7 @@ public class BenchmarkController {
 
         
         if (m_loaderClass != null && m_config.noLoader == false) {
-            ProfileMeasurement load_time = new ProfileMeasurement("load").start();
+            ProfileMeasurement load_time = new ProfileMeasurement("load").start();            
             this.startLoader();
             load_time.stop();
             LOG.info(String.format("Completed %s loading phase in %.2f sec",
@@ -461,6 +471,7 @@ public class BenchmarkController {
         // registerInterest(uploader);
     }
     
+    // TODO(kowshik): This is the place where hstore-sites are started in all servers.
     public void startSites(final Catalog catalog) {
         LOG.info(StringUtil.header("BENCHMARK INITIALIZE :: " + this.getProjectName()));
         if (debug.get()) LOG.debug("Number of hosts to start: " + m_launchHosts.size());
@@ -477,12 +488,12 @@ public class BenchmarkController {
                 LOG.trace("  " + e);
         } // FOR
 
-        for (Entry<Integer, Set<Pair<String, Integer>>> e : m_launchHosts.entrySet()) {
+        for (Entry<Integer, Set<Pair<String, Integer>>> e : m_launchHosts.entrySet()) {        	
             Integer site_id = e.getKey();
             Pair<String, Integer> p = CollectionUtil.first(e.getValue());
             assert(p != null);
             String host = p.getFirst();
-            String host_id = String.format("site-%02d-%s", site_id, host);
+            String host_id = String.format("site-%02d-%s", site_id, host);            
             
             // Check whether this one of the sites that will be started externally
             if (m_config.profileSiteIds.contains(site_id)) {
@@ -505,15 +516,44 @@ public class BenchmarkController {
             // Site Specific Parameters
             List<String> siteCommand = new ArrayList<String>(siteBaseCommand);
             siteCommand.add("-Dsite.id=" + site_id);
-
+            siteCommand.add(String.format("-Dsite.replica_id=%d", HStoreConstants.NO_REPLICATION_ID)); // adding dummy replica id
             String exec_command[] = SSHTools.convert(m_config.remoteUser, host, m_config.remotePath, m_config.sshOptions, siteCommand);
-            String fullCommand = StringUtil.join(" ", exec_command);
+            String fullCommand = StringUtil.join(" ", exec_command);            
             resultsUploader.setCommandLineForHost(host, fullCommand);
             if (trace.get()) LOG.trace("START " + HStoreSite.formatSiteName(site_id) + ": " + fullCommand);
             m_sitePSM.startProcess(host_id, exec_command);
             hosts_started++;
         } // FOR
 
+        // (kowshik) Repeating the above loop for each replica hosts for every site.
+        /******** BEGIN BLOCK FOR STARTING REPLICA HOSTS ***********/               
+        for (Entry<Integer, Map<Integer, Pair<String, Integer>>> e : m_launchReplicaHosts.entrySet()) {        	
+            Integer site_id = e.getKey();
+            
+            for (Entry<Integer, Pair<String, Integer>> replica : e.getValue().entrySet()) {
+            	Integer replica_id = replica.getKey();
+            	Pair<String, Integer> p = replica.getValue();
+                assert(p != null);
+                String host = p.getFirst();
+                String host_id = String.format("replica-site-%02d-%s", replica_id, host);
+                
+                LOG.info(String.format("(kowshik/vijay) Starting replica HStoreSite %s with replica ID: %s on %s", HStoreSite.formatSiteName(site_id), replica_id, host));
+                
+                // Site Specific Parameters
+                List<String> siteCommand = new ArrayList<String>(siteBaseCommand);
+                siteCommand.add("-Dsite.id=" + site_id);
+                siteCommand.add("-Dsite.replica_id=" + replica_id);
+                String exec_command[] = SSHTools.convert(m_config.remoteUser, host, m_config.remotePath, m_config.sshOptions, siteCommand);
+                String fullCommand = StringUtil.join(" ", exec_command);                
+                resultsUploader.setCommandLineForHost(host, fullCommand);
+                if (trace.get()) LOG.trace("START " + HStoreSite.formatSiteName(replica_id) + ": " + fullCommand);
+                m_sitePSM.startProcess(host_id, exec_command);
+                hosts_started++;
+            } // FOR
+        } // FOR
+        
+        /******** END BLOCK FOR STARTING REPLICA HOSTS ***********/
+        
         // WAIT FOR SERVERS TO BE READY
         int waiting = hosts_started;
         if (waiting > 0) {
@@ -529,7 +569,7 @@ public class BenchmarkController {
                 throw new RuntimeException("Failed to start all HStoreSites. Halting benchmark");
             }
         }
-        if (debug.get()) LOG.debug("All remote HStoreSites are initialized");
+        if (debug.get()) LOG.debug("All remote HStoreSites and their replicas are initialized");
     }
     
     public void startLoader() {
@@ -588,7 +628,7 @@ public class BenchmarkController {
         // RUN THE LOADER
 //        if (true || m_config.localmode) {
         allLoaderArgs.add("EXITONCOMPLETION=false");
-        try {
+        try {        	
             BenchmarkComponent.main(m_loaderClass, m_clientFileUploader, allLoaderArgs.toArray(new String[0]), true);
         } catch (Throwable ex) {
             this.failed = true;
@@ -1178,6 +1218,7 @@ public class BenchmarkController {
     }
 
     public static void main(final String[] vargs) throws Exception {
+    	
         boolean jsonOutput = false;
         int hostCount = 1;
         int sitesPerHost = 2;
@@ -1625,6 +1666,7 @@ public class BenchmarkController {
         }
         
         try {
+        	// TODO(kowshik): H-Store sites are started in the method call below.
             controller.setupBenchmark();
             if (config.noExecute == false) controller.runBenchmark();
         } catch (Throwable ex) {

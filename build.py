@@ -195,6 +195,7 @@ CTX.INPUT['catalog'] = """
  procedure.cpp
  procparameter.cpp
  program.cpp
+ replica.cpp
  site.cpp
  statement.cpp
  stmtparameter.cpp

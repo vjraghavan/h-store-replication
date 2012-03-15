@@ -26,6 +26,7 @@ public class VoltProcedureInvoker {
     private static final Logger LOG = Logger.getLogger(VoltProcedureInvoker.class);
     
     public static void main(String[] vargs) throws Exception {
+    	System.out.println("Inside VoltProcedureInvoker");
         ArgumentsParser args = ArgumentsParser.load(vargs);
         args.require(ArgumentsParser.PARAM_CATALOG);
         

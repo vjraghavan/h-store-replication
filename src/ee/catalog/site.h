@@ -30,6 +30,7 @@ namespace catalog {
 
 class Host;
 class Partition;
+class Replica;
 /**
  * A physical execution context for the system
  */
@@ -43,6 +44,7 @@ protected:
     int32_t m_id;
     CatalogType* m_host;
     CatalogMap<Partition> m_partitions;
+    CatalogMap<Replica> m_replicas;
     bool m_isUp;
     int32_t m_messenger_port;
     int32_t m_proc_port;
@@ -60,6 +62,8 @@ public:
     const Host * host() const;
     /** GETTER: Which logical data partition does this host process? */
     const CatalogMap<Partition> & partitions() const;
+    /** GETTER: What are the replicas of this site? */
+    const CatalogMap<Replica> & replicas() const;
     /** GETTER: Is the site up? */
     bool isUp() const;
     /** GETTER: Port used by HStoreCoordinator */

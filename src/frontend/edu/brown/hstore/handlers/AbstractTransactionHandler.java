@@ -47,6 +47,21 @@ public abstract class AbstractTransactionHandler<T extends GeneratedMessage, U e
         this.local_site_id = hstore_site.getSiteId();
     }
     
+    // (kowshik) Added extra method to send messages to replicas
+    /****** FOR REPLICATION ****************/
+    public void sendMessagesToReplicas(LocalTransaction ts, T request, RpcCallback<U> callback, int partitionId, Collection<Integer> replicaIds) {
+    	for (Integer replicaId : replicaIds) {
+    		HStoreService channel = hstore_coord.getChannel(replicaId);
+            assert(channel != null) : "Invalid partition id '" + partitionId + "'";
+            ProtoRpcController controller = this.getProtoRpcController(ts, replicaId);
+            assert(controller != null) : "Invalid " + request.getClass().getSimpleName() + " ProtoRpcController for site #" + replicaId;
+            this.sendRemote(channel, controller, request, callback);
+            LOG.info(String.format("(kowshik/vijay) Sent request: %s to replica ID: %s for partition: %d for transaction: %s",
+                    request, replicaId, partitionId, ts));
+    	}
+    }
+    /***********************************/
+    
     /**
      * Send a copy of a single message request to the partitions given as input
      * If a partition is managed by the local HStoreSite, then we will invoke

@@ -29,6 +29,27 @@ public abstract class HStoreConstants {
     public static final int MESSENGER_PORT_OFFSET = 10000;
     
     // ----------------------------------------------------------------------------
+    // (kowshik)
+    //
+    // REPLICATION STUFF
+    // ----------------------------------------------------------------------------
+    
+    // (kowshik) experimenting with replication factor of 1 to start with
+    public static final int REPLICATION_FACTOR = 2;
+    
+    // (kowshik) to be safe, setting separate replication proc port away from default port (see above)
+    public static final int DEFAULT_REPLICATION_PORT = 41212;
+    
+    // (kowshik) to be safe, setting high offset for replication msgr port from default replication port (see above)
+    public static final int REPLICATION_MSGR_PORT_OFFSET = 10000;
+    
+    // (kowshik) Starting id for replica. This needs to be handled in a cleaner way in the future.
+    public static final int REPLICA_FIRST_ID = 1000;
+    
+    // (kowshik) Used to denote a non-existent replication id
+    public static final int NO_REPLICATION_ID = -1;
+    
+    // ----------------------------------------------------------------------------
     // EXECUTION STUFF
     // ----------------------------------------------------------------------------
     
