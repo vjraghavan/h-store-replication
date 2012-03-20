@@ -544,7 +544,8 @@ public class BenchmarkController {
                 siteCommand.add("-Dsite.id=" + site_id);
                 siteCommand.add("-Dsite.replica_id=" + replica_id);
                 String exec_command[] = SSHTools.convert(m_config.remoteUser, host, m_config.remotePath, m_config.sshOptions, siteCommand);
-                String fullCommand = StringUtil.join(" ", exec_command);                
+                String fullCommand = StringUtil.join(" ", exec_command);
+                LOG.info(String.format("Replica startup command: %s", fullCommand));
                 resultsUploader.setCommandLineForHost(host, fullCommand);
                 if (trace.get()) LOG.trace("START " + HStoreSite.formatSiteName(replica_id) + ": " + fullCommand);
                 m_sitePSM.startProcess(host_id, exec_command);
